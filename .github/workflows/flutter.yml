@@ -29,6 +29,9 @@ jobs:
       - name: Analyze code
         run: flutter analyze
 
+      - name: Check formatting
+        run: flutter format --set-exit-if-changed .
+
       - name: Run tests
         run: flutter test
 
@@ -45,15 +48,17 @@ jobs:
             build-command: flutter build apk
             artifact-path: build/app/outputs/flutter-apk/app-release.apk
             artifact-name: android-apk
+
           - platform: linux
             os: ubuntu-latest
             build-command: flutter build linux
-            artifact-path: build/linux/x64/release/bundle
+            artifact-path: build/linux/x64/release/linux-build.zip
             artifact-name: linux-build
+
           - platform: windows
             os: windows-latest
             build-command: flutter build windows
-            artifact-path: build/windows/x64/runner/Release
+            artifact-path: build/windows/x64/runner/Release/windows-build.zip
             artifact-name: windows-build
 
     steps:
@@ -75,6 +80,18 @@ jobs:
 
       - name: Build ${{ matrix.platform }}
         run: ${{ matrix.build-command }}
+
+      - name: Zip Linux build
+        if: matrix.platform == 'linux'
+        run: |
+          cd build/linux/x64/release
+          zip -r linux-build.zip bundle
+
+      - name: Zip Windows build
+        if: matrix.platform == 'windows'
+        run: |
+          cd build/windows/x64/runner/Release
+          Compress-Archive -Path * -DestinationPath windows-build.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -105,7 +122,7 @@ jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build, build-ios]  # waits for all builds to complete
+    needs: [build, build-ios]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout repository
@@ -129,8 +146,6 @@ jobs:
           name: windows-build
           path: release-assets/windows
 
-      # iOS build is not uploaded — you'd typically distribute via TestFlight
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -138,7 +153,7 @@ jobs:
           tag_name: v${{ github.run_number }}
           files: |
             release-assets/android/app-release.apk
-            release-assets/linux/**/*
-            release-assets/windows/**/*
+            release-assets/linux/linux-build.zip
+            release-assets/windows/windows-build.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
