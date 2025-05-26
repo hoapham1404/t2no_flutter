@@ -34,15 +34,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.29.2'
-          cache: true
-      
-      - name: Install dependencies
-        run: flutter pub get
-      
       - name: Build Android APK
         run: flutter build apk
       
@@ -53,15 +44,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.29.2'
-          cache: true
-      
-      - name: Install dependencies
-        run: flutter pub get
       
       - name: Install Linux build dependencies
         run: sudo apt-get update && sudo apt-get install -y libglu1-mesa libc6:amd64 libstdc++6:amd64 lib32z1 libbz2-1.0:amd64 libgtk-3-dev
@@ -76,15 +58,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.29.2'
-          cache: true
-      
-      - name: Install dependencies
-        run: flutter pub get
       
       - name: Build iOS
         run: flutter build ios --no-codesign
