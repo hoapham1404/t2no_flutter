@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   testing:
     name: Test and Analyze
@@ -35,7 +38,7 @@ jobs:
     needs: testing
     strategy:
       matrix:
-        platform: [android, linux]
+        platform: [android, linux, windows]
         include:
           - platform: android
             os: ubuntu-latest
@@ -47,6 +50,11 @@ jobs:
             build-command: flutter build linux
             artifact-path: build/linux/x64/release/bundle
             artifact-name: linux-build
+          - platform: windows
+            os: windows-latest
+            build-command: flutter build windows
+            artifact-path: build/windows/x64/runner/Release
+            artifact-name: windows-build
 
     steps:
       - name: Checkout repository
@@ -93,6 +101,7 @@ jobs:
 
       - name: Build iOS (no codesign)
         run: flutter build ios --no-codesign
+
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
@@ -114,6 +123,12 @@ jobs:
           name: linux-build
           path: release-assets/linux
 
+      - name: Download Windows Build
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: release-assets/windows
+
       # iOS build is not uploaded — you'd typically distribute via TestFlight
 
       - name: Create GitHub Release
@@ -124,5 +139,6 @@ jobs:
           files: |
             release-assets/android/app-release.apk
             release-assets/linux/**/*
+            release-assets/windows/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
